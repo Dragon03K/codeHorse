@@ -14,6 +14,8 @@ const Logout = ({
 
   return (
     <span
+      role="button"
+      tabIndex={0}
       className={className}
       onClick={() =>
         signOut({
@@ -24,6 +26,18 @@ const Logout = ({
           },
         })
       }
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          signOut({
+            fetchOptions: {
+              onSuccess: () => {
+                router.push("/login");
+              },
+            },
+          });
+        }
+      }}
     >
       {children}
     </span>
