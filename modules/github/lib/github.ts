@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 
 interface contributionData {
   user: {
-    contributionCollection: {
+    contributionsCollection: {
       contributionCalendar: {
         totalContributions: number;
         weeks: {
@@ -51,7 +51,7 @@ export async function fetchUserContribution(token: string, username: string) {
   const query = `
     query($username:String!){
     user(login:$username){
-        contributionCollection {
+        contributionsCollection {
             contributionCalendar {
                 totalContributions
                 weeks {
@@ -66,8 +66,9 @@ export async function fetchUserContribution(token: string, username: string) {
       username,
     });
 
-    return response.user.contributionCollection.contributionCalendar;
+    return response.user.contributionsCollection.contributionCalendar;
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching user contributions:", error);
+    return null;
   }
 }
