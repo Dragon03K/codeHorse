@@ -30,6 +30,10 @@ export async function getDashboardStats() {
     const totalRepos = 30;
 
     const calendar = await fetchUserContribution(token, user.login);
+
+    console.log("Calendar response:", calendar);
+    console.log("Total contributions:", calendar?.totalContributions);
+
     const totalCommits = calendar?.totalContributions || 0;
 
     const { data: prs } = await octokit.rest.search.issuesAndPullRequests({
@@ -42,6 +46,13 @@ export async function getDashboardStats() {
 
     //TODO: COUNT AI REVIEWS FROM DATABASE
     const totalReviews = 44;
+
+    console.log("Dashboard stats:", {
+      totalCommits,
+      totalPrs,
+      totalRepos,
+      totalReviews,
+    });
 
     return {
       totalCommits,
@@ -176,5 +187,46 @@ export async function getMonthlyActivity() {
   } catch (error) {
     console.error("Error fetching monthly activity", error);
     return [];
+  }
+}
+
+export async function getContributionStats() {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
+    const token = await getGithubtoken();
+    const octokit = new Octokit({
+      auth: token,
+    });
+
+    const { data: user } = await octokit.rest.users.getAuthenticated();
+    const username = user.login;
+    const calendar = await fetchUserContribution(token, username);
+
+    if (!calendar) {
+      return null;
+    }
+
+    const contributions = calendar.weeks.flatMap((week: any) => {
+      return week.contributionDays.map((day: any) => ({
+        date: day.date,
+        count: day.contributionCount,
+        level: Math.min(4, Math.floor(day.contributionCount / 3)),
+      }));
+    });
+
+    return {
+      contribution: contributions,
+      totalContributions: calendar.totalContributions || 0,
+    };
+  } catch (error) {
+    console.error("Error fetching contribution stats", error);
+    return null;
   }
 }
